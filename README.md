@@ -9,6 +9,14 @@ on vetted primitives rather than home-grown crypto.
 pip install -r requirements.txt
 ```
 
+On Windows, `fencrypt.bat` is a launcher that runs the tool through this
+project's `.venv`, so you don't need to activate anything or install packages
+globally. It works from any directory:
+
+```
+C:\some\other\folder> C:\Users\arsha\Desktop\test-projecttt\fencrypt.bat encrypt notes.txt
+```
+
 ## Usage
 
 ```bash
