@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# never commit encrypted test artifacts or the plaintext they came from
+*.enc
+*.dec
+*.tmp
