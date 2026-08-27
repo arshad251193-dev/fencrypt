@@ -19,6 +19,24 @@ C:\some\other\folder> C:\Users\arsha\Desktop\test-projecttt\fencrypt.bat encrypt
 
 ## Usage
 
+### Web UI
+
+```bash
+.venv/Scripts/python.exe webapp.py
+```
+
+Then open <http://127.0.0.1:5057>. Pick a file, choose Encrypt or Decrypt, enter
+a password, and the result downloads. `webapp.py` is a thin Flask wrapper around
+`encrypt_bytes`/`decrypt_bytes` — it adds no crypto of its own.
+
+A browser UI widens the threat model, so: the server binds to **127.0.0.1 only**
+(the password crosses from the page into the process in a form body — never
+expose this on a network interface), plaintext and passwords stay in memory with
+nothing written to a temp file or log, and uploads are capped at 25 MiB because
+each request holds the whole file in RAM.
+
+### Command line
+
 ```bash
 python fencrypt.py encrypt secrets.txt
 ```

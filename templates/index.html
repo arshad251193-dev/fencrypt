@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fencrypt</title>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --panel: #12161c;
+    --panel-2: #171c24;
+    --line: #232a34;
+    --text: #e6edf3;
+    --dim: #7d8896;
+    --accent: #5eead4;
+    --accent-dim: #134e4a;
+    --danger: #f87171;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 32px 20px;
+    background:
+      radial-gradient(1000px 500px at 50% -10%, #0f2e2b 0%, transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .card {
+    width: 100%;
+    max-width: 520px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 24px 60px -20px rgba(0,0,0,.8);
+  }
+  header { margin-bottom: 24px; }
+  h1 {
+    margin: 0;
+    font: 600 22px/1 var(--mono);
+    letter-spacing: -.02em;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  h1 svg { color: var(--accent); flex: none; }
+  .sub {
+    margin: 7px 0 0 29px;
+    font: 500 11.5px/1 var(--mono);
+    color: var(--dim);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  /* mode toggle */
+  .modes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    margin-bottom: 20px;
+  }
+  .modes input { position: absolute; opacity: 0; pointer-events: none; }
+  .modes label {
+    text-align: center;
+    padding: 9px;
+    border-radius: 6px;
+    font: 600 13.5px/1 var(--mono);
+    color: var(--dim);
+    cursor: pointer;
+    transition: background .13s, color .13s;
+  }
+  .modes label:hover { color: var(--text); }
+  .modes input:checked + label {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  label.field {
+    display: block;
+    font: 600 11.5px/1 var(--mono);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 7px;
+  }
+  .row { margin-bottom: 17px; }
+
+  /* file drop */
+  .drop {
+    border: 1.5px dashed var(--line);
+    border-radius: 10px;
+    padding: 22px 16px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--panel-2);
+    transition: border-color .15s, background .15s;
+  }
+  .drop:hover, .drop.over { border-color: var(--accent); background: #14211f; }
+  .drop input { display: none; }
+  .drop .hint { color: var(--dim); font-size: 13px; }
+  .drop .picked {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    word-break: break-all;
+  }
+
+  input[type=password] {
+    width: 100%;
+    padding: 11px 13px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    font: 14px var(--mono);
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type=password]:focus { border-color: var(--accent); }
+
+  button {
+    width: 100%;
+    margin-top: 4px;
+    padding: 13px;
+    background: var(--accent);
+    color: #05231f;
+    border: 0;
+    border-radius: 8px;
+    font: 700 14px/1 var(--mono);
+    letter-spacing: .03em;
+    cursor: pointer;
+    transition: filter .15s;
+  }
+  button:hover:not(:disabled) { filter: brightness(1.12); }
+  button:disabled { opacity: .5; cursor: default; }
+
+  #msg {
+    margin-top: 16px;
+    padding: 11px 13px;
+    border-radius: 8px;
+    font: 13px/1.45 var(--mono);
+    display: none;
+    word-break: break-word;
+  }
+  #msg.err { display: block; background: #2a1315; border: 1px solid #5b2226; color: var(--danger); }
+  #msg.ok  { display: block; background: #0e2724; border: 1px solid var(--accent-dim); color: var(--accent); }
+
+  footer {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font: 11.5px/1.6 var(--mono);
+    color: var(--dim);
+  }
+  footer b { color: #9aa5b3; font-weight: 600; }
+</style>
+</head>
+<body>
+<main class="card">
+  <header>
+    <h1>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <rect x="4" y="10.5" width="16" height="10.5" rx="2"/>
+        <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
+      </svg>
+      fencrypt
+    </h1>
+    <p class="sub">AES-256-GCM &middot; scrypt</p>
+  </header>
+
+  <form id="f">
+    <div class="modes">
+      <input type="radio" name="mode" id="m-enc" value="encrypt" checked>
+      <label for="m-enc">Encrypt</label>
+      <input type="radio" name="mode" id="m-dec" value="decrypt">
+      <label for="m-dec">Decrypt</label>
+    </div>
+
+    <div class="row">
+      <label class="field">File</label>
+      <div class="drop" id="drop">
+        <input type="file" id="file" name="file">
+        <div class="hint" id="drop-text">Click to choose a file, or drag one here</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <label class="field" for="pw">Password</label>
+      <input type="password" id="pw" name="password" autocomplete="off" spellcheck="false">
+    </div>
+
+    <button type="submit" id="go">Encrypt file</button>
+  </form>
+
+  <div id="msg"></div>
+
+  <footer>
+    Runs on <b>127.0.0.1</b> only &mdash; nothing leaves this machine.<br>
+    Max <b>{{ max_mb }} MB</b>. Your original file is never modified.<br>
+    Lose the password and the file is <b>unrecoverable</b>.
+  </footer>
+</main>
+
+<script>
+const form = document.getElementById('f');
+const fileEl = document.getElementById('file');
+const drop = document.getElementById('drop');
+const dropText = document.getElementById('drop-text');
+const msg = document.getElementById('msg');
+const go = document.getElementById('go');
+
+function show(text, kind) {
+  msg.textContent = text;
+  msg.className = kind;
+}
+
+// keep the button label in sync with the selected mode
+for (const r of document.querySelectorAll('input[name=mode]')) {
+  r.addEventListener('change', () => {
+    go.textContent = r.value === 'encrypt' ? 'Encrypt file' : 'Decrypt file';
+  });
+}
+
+drop.addEventListener('click', () => fileEl.click());
+fileEl.addEventListener('change', paint);
+
+['dragenter', 'dragover'].forEach(ev =>
+  drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev =>
+  drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => {
+  if (e.dataTransfer.files.length) { fileEl.files = e.dataTransfer.files; paint(); }
+});
+
+function paint() {
+  const f = fileEl.files[0];
+  if (!f) { dropText.className = 'hint'; dropText.textContent = 'Click to choose a file, or drag one here'; return; }
+  dropText.className = 'picked';
+  dropText.textContent = f.name + '  (' + f.size.toLocaleString() + ' bytes)';
+}
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  show('', '');
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  go.disabled = true;
+  go.textContent = 'Deriving key…';
+
+  try {
+    const fd = new FormData();
+    fd.append('mode', mode);
+    fd.append('password', document.getElementById('pw').value);
+    if (fileEl.files[0]) fd.append('file', fileEl.files[0]);
+
+    const res = await fetch('/process', { method: 'POST', body: fd });
+
+    if (!res.ok) {
+      let err = 'request failed (' + res.status + ')';
+      try { err = (await res.json()).error || err; }
+      catch { if (res.status === 413) err = 'file is too large'; }
+      show(err, 'err');
+      return;
+    }
+
+    const name = res.headers.get('X-Filename') || 'output.bin';
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+
+    show((mode === 'encrypt' ? 'Encrypted → ' : 'Decrypted → ') + name, 'ok');
+  } catch (err) {
+    show('could not reach the server: ' + err.message, 'err');
+  } finally {
+    go.disabled = false;
+    go.textContent = mode === 'encrypt' ? 'Encrypt file' : 'Decrypt file';
+  }
+});
+</script>
+</body>
+</html>

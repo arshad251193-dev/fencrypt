@@ -1,2 +1,5 @@
 cryptography>=42.0
 pytest>=8.0
+
+# only needed for the optional web UI (webapp.py)
+flask>=3.0
